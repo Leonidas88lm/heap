@@ -39,6 +39,12 @@ func (h *heap[T]) aumentarCapacidad() {
 	}
 }
 
+func heapify[T any](arr []T, cmp func(T, T) int) {
+	for i := len(arr)/2 - 1; i >= 0; i-- {
+		filtrarAbajo(arr, i, cmp)
+	}
+}
+
 func CrearHeap[T any](cmp func(T, T) int) ColaPrioridad[T] {
 	return &heap[T]{datos: []T{}, cmp: cmp}
 }
@@ -47,11 +53,11 @@ func CrearHeapArr[T any](arreglo []T, cmp func(T, T) int) ColaPrioridad[T] {
 
 	datos := make([]T, len(arreglo))
 	copy(datos, arreglo)
+	heapify(datos, cmp)
 	h := &heap[T]{
 		datos: datos,
 		cmp:   cmp,
 	}
-	h.heapify()
 	return h
 }
 
@@ -80,15 +86,9 @@ func (h *heap[T]) Desencolar() T {
 	ultimo := len(h.datos) - 1
 	h.datos[0] = h.datos[ultimo]
 	h.datos = h.datos[:ultimo]
-	h.filtrarAbajo(0)
+	filtrarAbajo(h.datos, 0, h.cmp)
 	h.reducirCapacidad()
 	return max
-}
-
-func (h *heap[T]) heapify() {
-	for i := len(h.datos)/2 - 1; i >= 0; i-- {
-		h.filtrarAbajo(i)
-	}
 }
 
 func (h *heap[T]) filtrarArriba(pos int) {
@@ -102,23 +102,39 @@ func (h *heap[T]) filtrarArriba(pos int) {
 	}
 }
 
-func (h *heap[T]) filtrarAbajo(pos int) {
-	ultimo := len(h.datos) - 1
+func filtrarAbajo[T any](arr []T, pos int, cmp func(T, T) int) {
+	ultimo := len(arr) - 1
 	for {
 		hijoIzq := 2*pos + 1
 		hijoDer := 2*pos + 2
 		mayor := pos
 
-		if hijoIzq <= ultimo && h.cmp(h.datos[hijoIzq], h.datos[mayor]) > 0 {
+		if hijoIzq <= ultimo && cmp(arr[hijoIzq], arr[mayor]) > 0 {
 			mayor = hijoIzq
 		}
-		if hijoDer <= ultimo && h.cmp(h.datos[hijoDer], h.datos[mayor]) > 0 {
+		if hijoDer <= ultimo && cmp(arr[hijoDer], arr[mayor]) > 0 {
 			mayor = hijoDer
 		}
 		if mayor == pos {
 			break
 		}
-		h.datos[pos], h.datos[mayor] = h.datos[mayor], h.datos[pos]
+		arr[pos], arr[mayor] = arr[mayor], arr[pos]
 		pos = mayor
+	}
+}
+
+// Heapsort ordena un arreglo de acuerdo a la función de comparación.
+// El orden resultante es ascendente (del menor al mayor) según cmp.
+
+func HeapSort[T any](arreglo []T, cmp func(T, T) int) {
+
+	heapify(arreglo, cmp)
+	h := &heap[T]{datos: arreglo, cmp: cmp}
+
+	largo := len(arreglo)
+	for i := largo - 1; i > 0; i-- {
+		arreglo[0], arreglo[i] = arreglo[i], arreglo[0]
+		h.datos = arreglo[:i]
+		filtrarAbajo(h.datos, 0, h.cmp)
 	}
 }
